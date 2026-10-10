@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>For My Darling Jae ♥</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="petals" aria-hidden="true"></div>
+<main class="wrap">
+  <p class="topline">♡ A little something made just for you ♡</p>
+
+  <section class="card" id="gameSection">
+    <p class="eyebrow">BEFORE YOU OPEN YOUR LETTER</p>
+    <h1>A tiny challenge, my love</h1>
+    <p class="sub">Place blocks, clear full rows or columns, and reach <b>300 points</b> to unlock your next surprise.</p>
+    <div class="scores"><div><small>SCORE</small><b id="score">0</b></div><div><small>TARGET</small><b>300</b></div></div>
+    <div id="board" class="board" aria-label="Block puzzle grid"></div>
+    <p id="gameMessage" class="hint" aria-live="polite">Choose a block below, then tap an empty spot on the board.</p>
+    <small class="label">CHOOSE A BLOCK</small>
+    <div id="pieces" class="pieces"></div>
+    <button id="restart" class="btn light" type="button">Restart game</button>
+  </section>
+
+  <section class="card hidden" id="questionSection">
+    <p class="eyebrow">ONE MORE LITTLE THING</p>
+    <div class="big-heart">♡</div>
+    <h2>A question from my heart</h2>
+    <p class="question">What is one little thing about us that you hope we never stop doing, even years from now?</p>
+    <p class="sub">There is no right or wrong answer. Write whatever is in your heart.</p>
+    <form id="answerForm">
+      <label for="answer">Your answer</label>
+      <textarea id="answer" rows="5" maxlength="1500" placeholder="Take your time… write from your heart 💗" required></textarea>
+      <div class="count"><span id="count">0 / 26 minimum characters</span><span id="status" aria-live="polite"></span></div>
+      <p class="privacy">A little note: when you submit, your answer will be saved to a private response spreadsheet for me to read.</p>
+      <button id="submit" class="btn primary" type="submit">Submit my answer ♥</button>
+    </form>
+  </section>
+
+  <section class="card hidden" id="envelopeSection">
+    <p class="eyebrow">YOU MADE IT</p>
+    <h2>Your letter is waiting</h2>
+    <p class="sub">Put on your headphones if you like, then open your little surprise.</p>
+    <button class="envelope" id="openEnvelope" type="button" aria-label="Open your love letter">
+      <span class="env-back"></span><span class="paper">For Jae <b>♥</b></span>
+      <span class="env-front"></span><span class="flap"></span><span class="seal">♥</span>
+    </button>
+    <button id="musicButton" class="btn light" type="button">♪ Play music</button>
+  </section>
+
+  <section class="card letter hidden" id="letterSection">
+    <p class="eyebrow">OPEN WITH LOVE</p>
+    <h2>To my Darling Jae, <span class="pink">♥</span></h2>
+    <article class="letter-copy">
+      <p>My darling Jae,</p>
+      <p>If you are reading this, you made it through my little challenges. But the real gift is getting to tell you how much you mean to me.</p>
+      <p>Sometimes words feel too small for what the heart wants to express. I hope this little corner of the internet reminds you that you are thought of, appreciated, and cared for.</p>
+      <p>Thank you for the moments we share, the memories we are making, and the little things that make our story ours. I hope we keep choosing kindness, laughter, patience, and each other as the years go by.</p>
+      <p>Whatever tomorrow brings, I hope you never forget that this was made especially for you—with a full heart and a smile.</p>
+      <p class="signature">Always with love,<br><b>Your person ♥</b></p>
+    </article>
+    <figure class="couple-photo">
+      <img src="us.jpg" alt="A favourite photo of us together" onerror="this.style.display='none';document.getElementById('photoHelp').style.display='block'">
+      <figcaption>One of my favourite us moments ♡</figcaption>
+      <p id="photoHelp">Put your photo in this folder and name it <b>us.jpg</b>.</p>
+    </figure>
+    <button id="letterMusic" class="btn light" type="button">♪ Play / pause music</button>
+  </section>
+  <footer>A little love, in a little corner of the internet. ♡</footer>
+</main>
+
+<audio id="song" src="song.mp3" loop preload="auto"></audio>
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzU5l9lNchvUUBiaTCVly1J4hsI7H4E0PKWgUjhwTpRHmtu8mX03UF_34jZRjiQdPkp6Q/exec";
+
+// Rose petals
+const petalBox = document.getElementById("petals");
+const petalColors = ["#e85b78","#f29aaa","#c93659","#f6b9c5"];
+for (let i=0;i<22;i++) {
+  const p=document.createElement("i"); p.className="petal";
+  p.style.left=Math.random()*100+"%"; p.style.animationDelay=Math.random()*18+"s";
+  p.style.animationDuration=(12+Math.random()*13)+"s";
+  p.style.setProperty("--petal",petalColors[i%petalColors.length]);
+  p.style.setProperty("--sway",(Math.random()*150-75)+"px"); petalBox.appendChild(p);
+}
+
+// Block Blast-inspired 10x10 placement puzzle
+const N=10, TARGET=300;
+const colors=["pink","rose","lilac","gold","berry","peach"];
+const shapes=[
+ [[0,0]],[[0,0],[0,1]],[[0,0],[1,0]],[[0,0],[0,1],[0,2]],[[0,0],[1,0],[2,0]],
+ [[0,0],[0,1],[1,0],[1,1]],[[0,0],[0,1],[1,1],[1,2]],[[0,0],[1,0],[2,0],[2,1]],
+ [[0,0],[0,1],[0,2],[1,1]],[[0,0],[1,0],[2,0],[3,0]],[[0,0],[0,1],[0,2],[0,3]],
+ [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]],[[0,0],[1,0],[2,0],[1,1]],[[0,0],[1,0],[1,1]]
+];
+const boardEl=document.getElementById("board"), piecesEl=document.getElementById("pieces");
+const scoreEl=document.getElementById("score"), message=document.getElementById("gameMessage");
+let grid, score, tray, selected, won=false;
+function newPiece(){const s=shapes[Math.floor(Math.random()*shapes.length)].map(x=>[...x]);return {s,color:colors[Math.floor(Math.random()*colors.length)],used:false};}
+function resetGame(){grid=Array.from({length:N},()=>Array(N).fill(""));score=0;tray=[newPiece(),newPiece(),newPiece()];selected=-1;won=false;scoreEl.textContent=score;message.textContent="Choose a block below, then tap an empty spot on the board.";drawBoard();drawPieces();}
+function drawBoard(){
+ boardEl.innerHTML="";
+ grid.forEach((row,r)=>row.forEach((val,c)=>{
+  const b=document.createElement("button");b.type="button";b.className="cell"+(val?" "+val:"");
+  b.setAttribute("aria-label",`Row ${r+1}, column ${c+1}`);b.addEventListener("click",()=>place(r,c));boardEl.appendChild(b);
+ }));
+}
+function drawPieces(){
+ piecesEl.innerHTML="";
+ tray.forEach((piece,i)=>{
+  const b=document.createElement("button");b.type="button";b.className="piece"+(selected===i?" chosen":"")+(piece.used?" used":"");
+  b.disabled=piece.used||won;b.setAttribute("aria-label","Choose block "+(i+1));
+  const maxR=Math.max(...piece.s.map(x=>x[0])),maxC=Math.max(...piece.s.map(x=>x[1]));
+  const preview=document.createElement("span");preview.className="preview";
+  preview.style.gridTemplateColumns=`repeat(${maxC+1},13px)`;preview.style.gridTemplateRows=`repeat(${maxR+1},13px)`;
+  piece.s.forEach(([r,c])=>{const d=document.createElement("i");d.className="mini "+piece.color;d.style.gridRow=r+1;d.style.gridColumn=c+1;preview.appendChild(d);});
+  b.appendChild(preview);b.addEventListener("click",()=>{selected=i;message.textContent="Now tap an empty spot to place your block.";drawPieces();});piecesEl.appendChild(b);
+ });
+ if(tray.every(p=>p.used)&&!won){tray=[newPiece(),newPiece(),newPiece()];selected=-1;drawPieces();}
+}
+function fits(shape,r,c){return shape.every(([dr,dc])=>r+dr<N&&c+dc<N&&r+dr>=0&&c+dc>=0&&!grid[r+dr][c+dc]);}
+function place(r,c){
+ if(won)return;
+ if(selected<0||tray[selected].used){message.textContent="Choose a block first 💗";return;}
+ const piece=tray[selected];if(!fits(piece.s,r,c)){message.textContent="That block doesn't fit there. Try another empty spot.";return;}
+ piece.s.forEach(([dr,dc])=>grid[r+dr][c+dc]=piece.color);score+=piece.s.length;piece.used=true;selected=-1;
+ const rows=[],cols=[];
+ for(let y=0;y<N;y++)if(grid[y].every(Boolean))rows.push(y);
+ for(let x=0;x<N;x++)if(grid.every(row=>row[x]))cols.push(x);
+ const clear=new Set();
+ rows.forEach(y=>{for(let x=0;x<N;x++)clear.add(`${y},${x}`)});
+ cols.forEach(x=>{for(let y=0;y<N;y++)clear.add(`${y},${x}`)});
+ clear.forEach(k=>{const [y,x]=k.split(",").map(Number);grid[y][x]="";});
+ if(clear.size){score+=clear.size*2+(rows.length+cols.length)*10;message.textContent=`Lovely! You cleared ${rows.length+cols.length} line(s)!`;}
+ else message.textContent="Nice move! Keep placing blocks and clearing lines.";
+ scoreEl.textContent=score;drawBoard();
+ if(score>=TARGET){won=true;drawPieces();message.textContent="You did it, my love! The next surprise is ready 💗";setTimeout(()=>{document.getElementById("gameSection").classList.add("hidden");document.getElementById("questionSection").classList.remove("hidden");document.getElementById("questionSection").scrollIntoView({behavior:"smooth"});},800);}
+ else drawPieces();
+}
+document.getElementById("restart").addEventListener("click",resetGame);resetGame();
+
+// Personal answer -> Google Sheets. The visitor is informed that the response is saved.
+const answerEl=document.getElementById("answer"),countEl=document.getElementById("count"),statusEl=document.getElementById("status"),submitBtn=document.getElementById("submit");
+answerEl.addEventListener("input",()=>{const n=answerEl.value.trim().length;countEl.textContent=`${n} / 26 minimum characters`;countEl.classList.toggle("valid",n>=26);});
+document.getElementById("answerForm").addEventListener("submit",async e=>{
+ e.preventDefault();const answer=answerEl.value.trim();
+ if(answer.length<26){statusEl.textContent="Please write at least 26 characters.";statusEl.className="error";answerEl.focus();return;}
+ submitBtn.disabled=true;submitBtn.textContent="Submitting…";statusEl.textContent="Sending your answer…";statusEl.className="";
+ try{
+  // Apps Script's response is opaque with no-cors, so the browser cannot verify the sheet write.
+  await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({answer,page:"Darling Jae letter"})});
+  statusEl.textContent="Your answer has been submitted. Your letter is ready 💗";statusEl.className="success";
+  setTimeout(()=>{document.getElementById("questionSection").classList.add("hidden");document.getElementById("envelopeSection").classList.remove("hidden");document.getElementById("envelopeSection").scrollIntoView({behavior:"smooth"});},900);
+ }catch(err){statusEl.textContent="Couldn't submit. Please check your connection and try again.";statusEl.className="error";submitBtn.disabled=false;submitBtn.textContent="Submit my answer ♥";}
+});
+
+// Envelope and music
+const audio=document.getElementById("song"),musicBtn=document.getElementById("musicButton");
+async function playMusic(){try{await audio.play();musicBtn.textContent="♪ Music is playing";}catch(e){musicBtn.textContent="♪ Tap to play music";}}
+document.getElementById("openEnvelope").addEventListener("click",async()=>{
+ document.getElementById("openEnvelope").classList.add("opened");await playMusic();
+ setTimeout(()=>{document.getElementById("envelopeSection").classList.add("hidden");document.getElementById("letterSection").classList.remove("hidden");document.getElementById("letterSection").scrollIntoView({behavior:"smooth"});},850);
+});
+musicBtn.addEventListener("click",async()=>{if(audio.paused)await playMusic();else{audio.pause();musicBtn.textContent="♪ Play music";}});
+document.getElementById("letterMusic").addEventListener("click",async()=>{if(audio.paused){try{await audio.play();}catch(e){}}else audio.pause();});
+</script>
+</body>
+</html>
